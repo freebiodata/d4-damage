@@ -1,0 +1,108 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../data/site';
+
+const title = 'Diablo 4 Paragon Planner – Levels, XP & Time';
+const description =
+  'Free Diablo IV paragon planner: levels to your target, XP required at your average cost per level, and days of grinding at your real XP rate.';
+
+const faqs = [
+  {
+    q: 'Why an average XP per level instead of the real curve?',
+    a: 'Paragon XP requirements scale with level and season mechanics change the curve. Averaging across your target range keeps the tool simple and honest — enter a better average and the estimate sharpens.',
+  },
+  {
+    q: 'What is a realistic XP per hour?',
+    a: 'It depends wildly on season mechanics and gear. Measure one real hour of your best farming loop — the number is usually far from memory. Whispers, dungeons and elite-heavy routes differ 5–10×.',
+  },
+  {
+    q: 'Do elixirs and bonuses count?',
+    a: 'Fold them into XP per hour: if an elixir adds 5% and you run it always, your true rate already includes it. Enter the effective rate, not the base.',
+  },
+];
+
+const faqLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
+---
+
+<Base title={title} description={description} crumbs={[{ name: 'Tools', href: '/tools/' }, { name: 'Paragon Planner' }]} schema={[faqLd]}>
+  <div class="page-head">
+    <h1>Paragon Planner</h1>
+    <div class="h1-bar"></div>
+    <p class="lede">
+      The grind, planned: levels to your target, XP required, and the honest number of days at your measured
+      farming pace.
+    </p>
+    <div class="microline"><span>Free</span><span>No sign-up</span><span>Runs in your browser</span></div>
+  </div>
+
+  <form class="tool panel" id="pg" autocomplete="off" onsubmit="return false">
+    <div class="fields">
+      <label class="field"><span>Current paragon</span><input id="cur" type="number" value="180" min="1" step="1" inputmode="numeric" /></label>
+      <label class="field"><span>Target paragon</span><input id="tgt" type="number" value="230" min="2" step="1" inputmode="numeric" /></label>
+      <label class="field"><span>Avg XP per level</span><input id="xp" type="number" value="35" min="0.1" step="1" inputmode="decimal" /><small>millions, averaged over range</small></label>
+      <label class="field"><span>XP per hour</span><input id="rate" type="number" value="60" min="0.1" step="1" inputmode="decimal" /><small>millions, measured</small></label>
+      <label class="field"><span>Hours per day</span><input id="hrs" type="number" value="2" min="0.5" step="0.5" inputmode="decimal" /></label>
+    </div>
+    <button class="btn" type="button" onclick="calcPg()">Plan the grind</button>
+  </form>
+
+  <div class="result" id="result" aria-live="polite"></div>
+
+  <section class="prose">
+    <h2>How it works</h2>
+    <pre class="formula">totalXP (millions) = (target − current) × avgXPperLevel
+hours              = totalXP ÷ xpPerHour
+days               = hours ÷ hoursPerDay</pre>
+    <p>Flat-rate model with your own averages — see the FAQ for why. <a href="/methodology/">Methodology</a>.</p>
+
+    <h2>FAQ</h2>
+    {faqs.map((f) => (
+      <details><summary>{f.q}</summary><p>{f.a}</p></details>
+    ))}
+  </section>
+
+  <section class="prose">
+    <h2>Related tools and guides</h2>
+    <div class="cards">
+      <a class="card" href="/damage-calculator/"><span class="ico">⚔️</span><h3>Damage Calculator</h3><p>Faster clears = better XP rate.</p><span class="tag">Flagship</span></a>
+      <a class="card" href="/toughness-calculator/"><span class="ico">🛡️</span><h3>Toughness Calculator</h3><p>Survive higher-tier content for more XP.</p><span class="tag">Calculator</span></a>
+      <a class="card" href="/guides/survival-math/"><span class="ico">📙</span><h3>Survival math</h3><p>Stay alive to keep the grind rate.</p><span class="tag">Guide</span></a>
+    </div>
+  </section>
+
+  <div class="trust">
+    <strong>Maintained by {SITE.brand}</strong> · Free, no-ads, no-account · Model: <a href="/methodology/">Methodology</a> ·
+    Found an error? <a href="/contact/">Report it</a>.
+  </div>
+</Base>
+
+<script>
+  const $ = (id: string) => document.getElementById(id) as HTMLInputElement;
+  const numv = (id: string, fb = 0) => { const v = parseFloat($(id).value); return Number.isFinite(v) ? v : fb; };
+  const fmt = (n: number, d = 1) => (Number.isFinite(n) ? new Intl.NumberFormat('en-US', { maximumFractionDigits: d }).format(n) : '—');
+
+  function calcPg() {
+    const cur = numv('cur', 1), tgt = numv('tgt', 2), xp = numv('xp'), rate = numv('rate'), hrs = numv('hrs', 1);
+    const levels = Math.max(0, tgt - cur);
+    const total = levels * xp;
+    const hours = rate > 0 ? total / rate : NaN;
+    const days = hrs > 0 ? hours / hrs : NaN;
+    const el = document.getElementById('result')!;
+    el.innerHTML = `
+      <div class="stats">
+        <div class="stat"><span class="k">Levels to gain</span><span class="v gold">${fmt(levels, 0)}</span></div>
+        <div class="stat"><span class="k">Total XP (millions)</span><span class="v">${fmt(total, 1)}</span></div>
+        <div class="stat"><span class="k">Hours</span><span class="v">${fmt(hours, 1)}</span></div>
+        <div class="stat"><span class="k">Days @ ${fmt(hrs, 1)} h/day</span><span class="v blood">${fmt(days, 1)}</span></div>
+      </div>
+      <p class="note">Averages over your target range — sharpen by entering per-band XP. <a href="/methodology/">Methodology</a>.</p>`;
+    (window as any).calcPg = calcPg;
+  }
+  (window as any).calcPg = calcPg;
+  document.getElementById('pg')?.addEventListener('input', calcPg);
+  calcPg();
+</script>

@@ -1,0 +1,114 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../data/site';
+
+const title = 'Diablo 4 Stat Priority Comparator – Which Affix Wins';
+const description =
+  'Free Diablo IV stat priority comparator: rerolling 18% additive or 20% crit damage? Marginal multiplier math on your exact build decides, not forum folklore.';
+
+const faqs = [
+  {
+    q: 'What is marginal gain?',
+    a: 'The percent increase in expected damage from one specific change, computed on your current stats. Because buckets multiply, the same +X% is worth more in a bucket that\'s currently small — the comparator computes exactly that.',
+  },
+  {
+    q: 'Why does additive damage score lower than crit damage?',
+    a: 'Additive affixes share one bucket, so they suffer diminishing returns as the bucket grows; crit and vulnerable have their own buckets. Late in a build, +10% additive often moves expected damage ~2–4% while +10% crit damage moves it proportionally more.',
+  },
+  {
+    q: 'Should I just always pick the bigger number?',
+    a: 'No — always pick the bigger marginal gain, which depends on what you already have. That\'s the entire point of this tool.',
+  },
+];
+
+const faqLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
+---
+
+<Base title={title} description={description} crumbs={[{ name: 'Tools', href: '/tools/' }, { name: 'Stat Priority Comparator' }]} schema={[faqLd]}>
+  <div class="page-head">
+    <h1>Stat Priority Comparator</h1>
+    <div class="h1-bar"></div>
+    <p class="lede">
+      Two affixes, one reroll token. Enter your current stats and both candidate affixes — get the marginal
+      damage gain of each, computed on your exact build.
+    </p>
+    <div class="microline"><span>Free</span><span>No sign-up</span><span>Runs in your browser</span></div>
+  </div>
+
+  <form class="tool panel" id="sp" autocomplete="off" onsubmit="return false">
+    <div class="fields">
+      <label class="field"><span>Current main stat</span><input id="ms" type="number" value="800" min="0" step="10" inputmode="numeric" /></label>
+      <label class="field"><span>Current additive %</span><input id="add" type="number" value="120" min="0" step="5" inputmode="numeric" /></label>
+      <label class="field"><span>Current crit dmg bonus %</span><input id="cdb" type="number" value="150" min="0" step="5" inputmode="numeric" /></label>
+      <label class="field"><span>Current vuln bonus %</span><input id="vdb" type="number" value="60" min="0" step="5" inputmode="numeric" /></label>
+      <label class="field"><span>Option A — additive</span><input id="aAdd" type="number" value="18" min="0" step="1" inputmode="numeric" /><small>+X% damage affix</small></label>
+      <label class="field"><span>Option B — crit dmg</span><input id="bCdb" type="number" value="20" min="0" step="1" inputmode="numeric" /><small>+X% crit damage affix</small></label>
+    </div>
+    <button class="btn" type="button" onclick="calcSP()">Compare</button>
+  </form>
+
+  <div class="result" id="result" aria-live="polite"></div>
+
+  <section class="prose">
+    <h2>How it works</h2>
+    <pre class="formula">gain of +X in a bucket = X ÷ current bucket value
+additive bucket  = 1 + additive%/100
+crit bucket      = 1.5 + critBonus%/100</pre>
+    <p>The comparator computes each option's multiplier delta on your current numbers — the honest version of "which stat should I stack". Assumptions: <a href="/methodology/">methodology</a>.</p>
+
+    <h2>FAQ</h2>
+    {faqs.map((f) => (
+      <details><summary>{f.q}</summary><p>{f.a}</p></details>
+    ))}
+  </section>
+
+  <section class="prose">
+    <h2>Related tools and guides</h2>
+    <div class="cards">
+      <a class="card" href="/damage-calculator/"><span class="ico">⚔️</span><h3>Damage Calculator</h3><p>Full expected hits with the new affix.</p><span class="tag">Flagship</span></a>
+      <a class="card" href="/guides/crit-vs-vulnerable/"><span class="ico">📗</span><h3>Crit vs Vulnerable</h3><p>The two buckets most builds fight over.</p><span class="tag">Guide</span></a>
+      <a class="card" href="/guides/how-damage-works/"><span class="ico">📘</span><h3>How damage works</h3><p>Why buckets decide the answer.</p><span class="tag">Guide</span></a>
+    </div>
+  </section>
+
+  <div class="trust">
+    <strong>Maintained by {SITE.brand}</strong> · Free, no-ads, no-account · Model: <a href="/methodology/">Methodology</a> ·
+    Found an error? <a href="/contact/">Report it</a>.
+  </div>
+</Base>
+
+<script>
+  const $ = (id: string) => document.getElementById(id) as HTMLInputElement;
+  const numv = (id: string, fb = 0) => { const v = parseFloat($(id).value); return Number.isFinite(v) ? v : fb; };
+  const fmt = (n: number, d = 1) => (Number.isFinite(n) ? new Intl.NumberFormat('en-US', { maximumFractionDigits: d }).format(n) : '—');
+
+  function calcSP() {
+    const add = numv('add'), cdb = numv('cdb'), aAdd = numv('aAdd'), bCdb = numv('bCdb');
+    if (add < 0 || cdb < 0) return;
+    const addBkt = 1 + add / 100;
+    const critBkt = 1.5 + cdb / 100;
+    const gA = aAdd > 0 ? aAdd / 100 / addBkt * 100 : 0;
+    const gB = bCdb > 0 ? bCdb / 100 / critBkt * 100 : 0;
+    const winner = gA >= gB ? 'A' : 'B';
+    const el = document.getElementById('result')!;
+    el.innerHTML = `
+      <div class="stats">
+        <div class="stat"><span class="k">Option A — +${fmt(aAdd, 0)}% additive</span><span class="v gold">+${fmt(gA, 2)}% DMG</span></div>
+        <div class="stat"><span class="k">Option B — +${fmt(bCdb, 0)}% crit dmg</span><span class="v">+${fmt(gB, 2)}% DMG</span></div>
+        <div class="stat"><span class="k">Winner</span><span class="v blood">Option ${winner}</span></div>
+      </div>
+      <div class="rows">
+        <div class="row"><span>Additive bucket now</span><b>×${fmt(addBkt, 2)}</b></div>
+        <div class="row"><span>Crit bucket now</span><b>×${fmt(critBkt, 2)}</b></div>
+      </div>
+      <p class="note">Marginal gains scale down as a bucket grows — rerun after big changes. Vulnerable bucket assumed constant across both options here. <a href="/methodology/">Methodology</a>.</p>`;
+    (window as any).calcSP = calcSP;
+  }
+  (window as any).calcSP = calcSP;
+  document.getElementById('sp')?.addEventListener('input', calcSP);
+  calcSP();
+</script>

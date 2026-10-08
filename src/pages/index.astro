@@ -1,0 +1,91 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE, TOOLS, GUIDES } from '../data/site';
+
+const title = 'Diablo 4 Damage Calculator – The Bucket Model, Free';
+const description =
+  'Free Diablo IV damage calculator built on the community bucket model: weapon damage, main stat, crit, vulnerable and additive buckets — expected hit numbers, no sign-up.';
+
+const websiteLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: SITE.brand,
+  url: Astro.site?.toString(),
+  description,
+};
+const orgLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: SITE.brand,
+  url: Astro.site?.toString(),
+  description: 'Unofficial fan-made Diablo IV damage math.',
+};
+---
+
+<Base title={title} description={description} schema={[websiteLd, orgLd]}>
+  <section class="hero">
+    <p class="kicker">{SITE.kicker} {SITE.lastVerified}</p>
+    <h1>Your build's damage, in numbers you can audit.</h1>
+    <p class="sub">
+      The community bucket model as a free calculator: every input maps to a stat-screen number, every formula
+      is published. No black boxes, no sign-up.
+    </p>
+    <div class="rite">
+      Blizzard's exact formulas are unpublished and shift between seasons — so this model is
+      <strong>parameterized and labeled [VERIFY]</strong>, never asserted as truth. <a href="/methodology/">Read the methodology →</a>
+    </div>
+  </section>
+
+  <section aria-labelledby="tools-h">
+    <h2 id="tools-h">The toolkit</h2>
+    <div class="cards">
+      {TOOLS.map((t) => (
+        <a class="card" href={t.href}>
+          <span class="ico">{t.ico}</span>
+          <h3>{t.name}</h3>
+          <p>{t.desc}</p>
+          <span class="tag">{t.tag}</span>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <section class="prose" aria-labelledby="chooser-h">
+    <h2 id="chooser-h">Which tool do I need?</h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th scope="col">Your question</th><th scope="col">Use</th></tr></thead>
+        <tbody>
+          <tr><td>"How hard does my build actually hit?"</td><td><a href="/damage-calculator/">Damage Calculator</a></td></tr>
+          <tr><td>"This affix or that affix — which wins?"</td><td><a href="/stat-priority/">Stat Priority Comparator</a></td></tr>
+          <tr><td>"Why am I getting one-shot in the Pit?"</td><td><a href="/toughness-calculator/">Toughness Calculator</a></td></tr>
+          <tr><td>"How long to paragon 260?"</td><td><a href="/paragon-planner/">Paragon Planner</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="prose" aria-labelledby="why-h">
+    <h2 id="why-h">Why D4 DAMAGE</h2>
+    <ul>
+      <li><strong>Transparent by design.</strong> Every formula is on the <a href="/methodology/">methodology page</a> — the antidote to disputed planner numbers.</li>
+      <li><strong>No ads, no account, no paywall.</strong> The tools are the offering.</li>
+      <li><strong>All client-side.</strong> Your build numbers never leave your browser.</li>
+      <li><strong>Season-proof honesty.</strong> Constants are editable [VERIFY] flags, not fake confidence.</li>
+    </ul>
+  </section>
+
+  <section class="prose" aria-labelledby="learn-h">
+    <h2 id="learn-h">Learn the math</h2>
+    <div class="cards">
+      {GUIDES.map((g) => (
+        <a class="card" href={g.href}>
+          <span class="ico">{g.ico}</span>
+          <h3>{g.name}</h3>
+          <p>{g.desc}</p>
+          <span class="tag">Guide</span>
+        </a>
+      ))}
+    </div>
+  </section>
+</Base>

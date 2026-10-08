@@ -1,0 +1,76 @@
+---
+import Base from '../../layouts/Base.astro';
+import { SITE } from '../../data/site';
+
+const title = 'How Diablo 4 Damage Works – The Bucket Model';
+const description =
+  'How damage works in Diablo IV: the five buckets, why they multiply, why additive affixes feel weak, and a worked example you can reproduce in our calculator.';
+const updated = SITE.lastVerified;
+---
+
+<Base
+  title={title}
+  description={description}
+  crumbs={[{ name: 'Guides' }, { name: 'How Damage Works' }]}
+  schema={[{
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: 'How damage works in Diablo IV',
+    datePublished: '2026-10-08',
+    dateModified: updated,
+    author: { '@type': 'Organization', name: SITE.brand },
+  }]}
+>
+  <div class="page-head">
+    <h1>How damage works</h1>
+    <div class="h1-bar"></div>
+    <p class="lede">
+      Diablo IV's damage formula hides behind skill tooltips, but the community-mapped shape is stable: a
+      handful of multiplier buckets. Learn the buckets and half of build optimization becomes arithmetic.
+    </p>
+    <div class="microline"><span>By {SITE.brand}</span><span>Updated {updated}</span></div>
+  </div>
+
+  <section class="prose">
+    <h2>Quick answer</h2>
+    <p>
+      Damage = weapon × skill% × (1 + main stat/1000) × [1 + vulnerable bonus] × [1 + crit bonus] ×
+      [1 + Σ additive affixes]. The bracketed groups are <strong>buckets</strong> — they multiply each other,
+      while bonuses inside the additive bucket only add to each other. Reproduce any build in the{' '}
+      <a href="/damage-calculator/">damage calculator</a>.
+    </p>
+    <div class="rite">Blizzard's exact constants are unpublished and have shifted between seasons — this model is documented and flagged [VERIFY], not asserted. <a href="/methodology/">Methodology</a>.</div>
+
+    <h2>The buckets</h2>
+    <ol class="steps">
+      <li><strong>Base:</strong> weapon damage × the skill's weapon-damage percentage. Everything else multiplies this.</li>
+      <li><strong>Attribute:</strong> your main stat adds +0.1% per point over 100 — a personal, always-on bucket.</li>
+      <li><strong>Vulnerable:</strong> its own multiplier when the enemy is vulnerable; the affixes that grow it live here.</li>
+      <li><strong>Critical:</strong> its own multiplier on crits only — which is why crit chance and crit damage feed each other.</li>
+      <li><strong>Additive:</strong> every "% damage" affix (core skills, close, CC'd, elite…) shares one bucket and adds together. This is the bucket that disappoints.</li>
+    </ol>
+
+    <h2>Why additive damage feels weak</h2>
+    <pre class="formula">+20% additive with 200% already in the bucket:
+  new bucket = 2.2/2.0 → ×1.10 damage total
+
++20% crit damage with 150% in its bucket:
+  new bucket = 1.7/1.5 → ×1.133 damage total</pre>
+    <p>Same affix number, bigger result — because crit's bucket was smaller. That's the whole game: <strong>grow small buckets</strong>, not big ones. The <a href="/stat-priority/">stat priority comparator</a> automates exactly this decision.</p>
+
+    <h2>Worked example</h2>
+    <p>
+      1200 weapon damage skill at 180%, 800 main stat, 120% additive, 60% vuln bonus, 150% crit bonus: base
+      ×1.80×1.80 = 3888; additive ×2.2; vulnerable ×1.8; crit ×3.0 → a full proc hits ~38,700, and the
+      <a href="/damage-calculator/">calculator</a> shows the expected hit weighted by your crit chance and
+      vulnerable uptime.
+    </p>
+
+    <h2>What the model deliberately ignores</h2>
+    <ul>
+      <li>Enemy defense and level scaling (separate mitigation layer).</li>
+      <li>Lucky Hit, Fortify interactions and aspect-specific conditionals — parameterize them into the additive bucket if they're uptime-based.</li>
+      <li>Bucket-boundary changes Blizzard makes between seasons — flagged [VERIFY], not asserted.</li>
+    </ul>
+  </section>
+</Base>

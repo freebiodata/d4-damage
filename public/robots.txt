@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://d4damage.top/sitemap-index.xml

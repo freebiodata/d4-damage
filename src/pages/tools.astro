@@ -1,0 +1,34 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE, TOOLS, GUIDES } from '../data/site';
+
+const title = 'All Diablo 4 Tools – Damage, Stats, Toughness, Paragon';
+const description =
+  'Every D4 DAMAGE tool in one place: bucket-model damage calculator, stat priority comparator, toughness calculator and paragon planner — free, no sign-up, client-side.';
+---
+
+<Base title={title} description={description} crumbs={[{ name: 'Tools' }]}>
+  <div class="page-head">
+    <h1>All Diablo IV tools</h1>
+    <div class="h1-bar"></div>
+    <p class="lede">Four tools covering both halves of Sanctuary math: how hard you hit, and how long you stand.</p>
+  </div>
+
+  <div class="cards">
+    {TOOLS.map((t) => (
+      <a class="card" href={t.href}>
+        <span class="ico">{t.ico}</span>
+        <h3>{t.name}</h3>
+        <p>{t.desc}</p>
+        <span class="tag">{t.tag}</span>
+      </a>
+    ))}
+  </div>
+
+  <section class="prose">
+    <h2>Guides that feed the tools</h2>
+    <ul>
+      {GUIDES.map((g) => <li><a href={g.href}>{g.name}</a> — {g.desc}</li>)}
+    </ul>
+  </section>
+</Base>

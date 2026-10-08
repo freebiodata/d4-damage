@@ -1,0 +1,109 @@
+---
+import '../styles/global.css';
+import { SITE, NAV, TOOLS, GUIDES } from '../data/site';
+
+interface Props {
+  title: string;
+  description: string;
+  crumbs?: { name: string; href?: string }[];
+  schema?: Record<string, unknown>[];
+}
+const { title, description, crumbs = [], schema = [] } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const trail = [{ name: 'Home', href: '/' }, ...crumbs];
+const isCurrent = (href: string) =>
+  href === '/tools/'
+    ? Astro.url.pathname === '/tools/'
+    : Astro.url.pathname === href || (href.startsWith('/guides/') && Astro.url.pathname.startsWith('/guides/'));
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta name="theme-color" content="#0d0a08" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content={SITE.brand} />
+    {schema.map((obj) => <script type="application/ld+json" set:html={JSON.stringify(obj)} />)}
+    {crumbs.length > 0 && (
+      <script type="application/ld+json" set:html={JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: trail.map((c, i) => ({
+          '@type': 'ListItem', position: i + 1, name: c.name,
+          ...(c.href ? { item: new URL(c.href, Astro.site).toString() } : {}),
+        })),
+      })} />
+    )}
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-head">
+      <div class="wrap head-row">
+        <a class="brand" href="/">D4<span class="d4">◆</span>DAMAGE</a>
+        <nav class="site-nav" aria-label="Primary">
+          {NAV.map((l) => (
+            <a href={l.href} aria-current={isCurrent(l.href) ? 'page' : undefined}>{l.label}</a>
+          ))}
+        </nav>
+      </div>
+    </header>
+    <main id="main" class="wrap">
+      {crumbs.length > 0 && (
+        <nav class="crumbs" aria-label="Breadcrumb">
+          <ol>
+            {trail.map((c, i) => (
+              <li>
+                {c.href && i < trail.length - 1 ? <a href={c.href}>{c.name}</a> : <span aria-current="page">{c.name}</span>}
+              </li>
+            ))}
+          </ol>
+        </nav>
+      )}
+      <slot />
+    </main>
+    <footer class="site-foot">
+      <div class="wrap">
+        <div class="foot-grid">
+          <div>
+            <h4>Tools</h4>
+            <ul>{TOOLS.map((t) => <li><a href={t.href}>{t.name}</a></li>)}<li><a href="/tools/">All tools</a></li></ul>
+          </div>
+          <div>
+            <h4>Guides</h4>
+            <ul>{GUIDES.map((g) => <li><a href={g.href}>{g.name}</a></li>)}</ul>
+          </div>
+          <div>
+            <h4>Site</h4>
+            <ul>
+              <li><a href="/about/">About</a></li>
+              <li><a href="/contact/">Contact</a></li>
+              <li><a href="/methodology/">Methodology</a></li>
+              <li><a href="/changelog/">Changelog</a></li>
+              <li><a href="/sitemap/">HTML Sitemap</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4>Legal</h4>
+            <ul>
+              <li><a href="/privacy/">Privacy</a></li>
+              <li><a href="/terms/">Terms</a></li>
+            </ul>
+          </div>
+        </div>
+        <p class="foot-legal">{SITE.disclaimer}</p>
+      </div>
+    </footer>
+  </body>
+</html>

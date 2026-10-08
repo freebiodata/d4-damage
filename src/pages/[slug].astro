@@ -1,0 +1,54 @@
+---
+import Base from '../layouts/Base.astro';
+import { TRUST, TOOLS, GUIDES, SITE } from '../data/site';
+
+export function getStaticPaths() {
+  return TRUST.map((page) => ({ params: { slug: page.slug }, props: { page } }));
+}
+const { page } = Astro.props;
+const heading = page.slug[0].toUpperCase() + page.slug.slice(1);
+---
+
+<Base title={page.title} description={page.desc} crumbs={[{ name: heading }]}>
+  {page.slug === 'sitemap' && (
+    <div>
+      <div class="page-head">
+        <h1>HTML sitemap</h1>
+        <div class="h1-bar"></div>
+        <p class="lede">Every page on {SITE.brand} — one click from here.</p>
+      </div>
+      <div class="cards" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
+        <div class="panel">
+          <h3>Tools</h3>
+          <ul>{TOOLS.map((t) => <li><a href={t.href}>{t.name}</a></li>)}<li><a href="/tools/">All tools</a></li></ul>
+        </div>
+        <div class="panel">
+          <h3>Guides</h3>
+          <ul>{GUIDES.map((g) => <li><a href={g.href}>{g.name}</a></li>)}</ul>
+        </div>
+        <div class="panel">
+          <h3>Site</h3>
+          <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/about/">About</a></li>
+            <li><a href="/contact/">Contact</a></li>
+            <li><a href="/methodology/">Methodology</a></li>
+            <li><a href="/changelog/">Changelog</a></li>
+            <li><a href="/privacy/">Privacy</a></li>
+            <li><a href="/terms/">Terms</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  )}
+  {page.slug !== 'sitemap' && (
+    <div>
+      <div class="page-head">
+        <h1>{heading}</h1>
+        <div class="h1-bar"></div>
+        <p class="lede">{page.desc}</p>
+      </div>
+      <section class="prose" set:html={page.html} />
+    </div>
+  )}
+</Base>

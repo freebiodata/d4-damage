@@ -1,0 +1,127 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../data/site';
+
+const title = 'Diablo 4 Damage Calculator – Expected Hit & Crit Numbers';
+const description =
+  'Free Diablo IV damage calculator on the community bucket model: weapon damage, main stat, crit and vulnerable bonuses, additive damage — non-crit, crit and expected hits.';
+
+const faqs = [
+  {
+    q: 'What are "buckets" in Diablo IV damage?',
+    a: 'Groups of bonuses that multiply together. Primary attribute is its own bucket, vulnerable another, critical damage another, and the many additive affixes (core skill %, close damage, CC damage…) share one bucket. Bonuses in the same bucket add; buckets multiply — which is why spreading bonuses across buckets beats stacking one.',
+  },
+  {
+    q: 'Why do my numbers differ from in-game?',
+    a: 'Blizzard\'s exact formula is unpublished and has shifted between seasons. This model covers the documented buckets with editable constants — it excels at build-vs-build comparison, while absolute numbers can drift. See the <a href="/methodology/">methodology</a> for every assumption.',
+  },
+  {
+    q: 'What is the expected hit?',
+    a: 'Your average hit accounting for crit and vulnerable probabilities: non-crit damage plus the crit and vulnerable multipliers each weighted by their chance. Rotation and DPS math should always use the expected number.',
+  },
+];
+
+const faqLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
+---
+
+<Base title={title} description={description} crumbs={[{ name: 'Tools', href: '/tools/' }, { name: 'Damage Calculator' }]} schema={[faqLd]}>
+  <div class="page-head">
+    <h1>Damage Calculator</h1>
+    <div class="h1-bar"></div>
+    <p class="lede">
+      The bucket model as a calculator: every input maps to a stat-screen number, and the output shows exactly
+      which multiplier did what.
+    </p>
+    <div class="microline"><span>Free</span><span>No sign-up</span><span>Runs in your browser</span><span>Model reviewed {SITE.lastVerified}</span></div>
+  </div>
+
+  <form class="tool panel" id="dmg" autocomplete="off" onsubmit="return false">
+    <div class="fields">
+      <label class="field"><span>Weapon damage</span><input id="wd" type="number" value="1200" min="1" inputmode="numeric" /><small>Displayed weapon range (mid)</small></label>
+      <label class="field"><span>Skill multiplier</span><input id="mult" type="number" value="180" min="1" step="1" inputmode="numeric" /><small>% weapon damage</small></label>
+      <label class="field"><span>Main stat</span><input id="ms" type="number" value="800" min="0" step="10" inputmode="numeric" /><small>Str/Int/Will/Dex</small></label>
+      <label class="field"><span>Crit damage bonus</span><input id="cdb" type="number" value="150" min="0" step="10" inputmode="numeric" /><small>% above base 50%</small></label>
+      <label class="field"><span>Vuln damage bonus</span><input id="vdb" type="number" value="60" min="0" step="10" inputmode="numeric" /><small>% above base 20% [VERIFY]</small></label>
+      <label class="field"><span>Additive bonuses</span><input id="add" type="number" value="120" min="0" step="10" inputmode="numeric" /><small>Sum of %dmg affixes</small></label>
+      <label class="field"><span>Crit chance</span><input id="cc" type="number" value="40" min="0" max="100" step="1" inputmode="numeric" /><small>%</small></label>
+      <label class="field"><span>Vulnerable uptime</span><input id="vu" type="number" value="70" min="0" max="100" step="1" inputmode="numeric" /><small>% of the fight</small></label>
+    </div>
+    <button class="btn" type="button" onclick="calcD4()">Calculate</button>
+  </form>
+
+  <div class="result" id="result" aria-live="polite"></div>
+
+  <section class="prose">
+    <h2>How it works</h2>
+    <pre class="formula">base    = weapon × skill% × (1 + mainStat/1000)
+addBkt  = 1 + additive%/100
+vuln    = 1 + 0.20 + vulnBonus/100          [baseline VERIFY]
+crit    = 1.50 + critBonus/100
+plain   = base × addBkt
+critVuln= plain × vuln × crit
+expected= plain × (1 + cc·(crit−1)) × (1 + vu·(vuln−1))</pre>
+    <p>Baseline vulnerable is 20% and baseline crit is 50% in the community model [VERIFY per season]. Enemy-specific multipliers (elite damage, Fortify, berserking) fold into the additive field. Full derivation: <a href="/methodology/">methodology</a>.</p>
+
+    <h2>FAQ</h2>
+    {faqs.map((f) => (
+      <details><summary>{f.q}</summary><p>{f.a}</p></details>
+    ))}
+  </section>
+
+  <section class="prose">
+    <h2>Related tools and guides</h2>
+    <div class="cards">
+      <a class="card" href="/stat-priority/"><span class="ico">🧿</span><h3>Stat Priority Comparator</h3><p>Which affix to reroll next — marginal math.</p><span class="tag">Calculator</span></a>
+      <a class="card" href="/guides/how-damage-works/"><span class="ico">📘</span><h3>How damage works</h3><p>Buckets, why they multiply, why additive lags.</p><span class="tag">Guide</span></a>
+      <a class="card" href="/toughness-calculator/"><span class="ico">🛡️</span><h3>Toughness Calculator</h3><p>The other half: surviving the hit back.</p><span class="tag">Calculator</span></a>
+    </div>
+  </section>
+
+  <div class="trust">
+    <strong>Maintained by {SITE.brand}</strong> · Free, no-ads, no-account · Model: <a href="/methodology/">Methodology</a> ·
+    Found an error? <a href="/contact/">Report it</a>.
+  </div>
+</Base>
+
+<script>
+  const $ = (id: string) => document.getElementById(id) as HTMLInputElement;
+  const numv = (id: string, fb = 0) => { const v = parseFloat($(id).value); return Number.isFinite(v) ? v : fb; };
+  const fmt = (n: number) => (Number.isFinite(n) ? new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Math.round(n)) : '—');
+
+  function calcD4() {
+    const wd = numv('wd'), mult = numv('mult', 100), ms = numv('ms');
+    const cdb = numv('cdb') / 100, vdb = numv('vdb') / 100, add = numv('add') / 100;
+    const cc = Math.min(100, Math.max(0, numv('cc'))) / 100;
+    const vu = Math.min(100, Math.max(0, numv('vu'))) / 100;
+    if (wd <= 0 || mult <= 0) return;
+    const base = wd * (mult / 100) * (1 + ms / 1000);
+    const addBkt = 1 + add;
+    const vulnMult = 1 + 0.2 + vdb;
+    const critMult = 1.5 + cdb;
+    const plain = base * addBkt;
+    const fullCritVuln = plain * vulnMult * critMult;
+    const expected = plain * (1 + cc * (critMult - 1)) * (1 + vu * (vulnMult - 1));
+    const el = document.getElementById('result')!;
+    el.innerHTML = `
+      <div class="stats">
+        <div class="stat"><span class="k">Expected hit</span><span class="v">${fmt(expected)}</span></div>
+        <div class="stat"><span class="k">Crit + Vulnerable</span><span class="v blood">${fmt(fullCritVuln)}</span></div>
+        <div class="stat"><span class="k">Plain hit</span><span class="v gold">${fmt(plain)}</span></div>
+      </div>
+      <div class="rows">
+        <div class="row"><span>Attribute multiplier</span><b>×${(1 + ms / 1000).toFixed(2)}</b></div>
+        <div class="row"><span>Additive bucket</span><b>×${addBkt.toFixed(2)}</b></div>
+        <div class="row"><span>Vulnerable multiplier</span><b>×${vulnMult.toFixed(2)} @ ${fmt(vu * 100)}% uptime</b></div>
+        <div class="row"><span>Crit multiplier</span><b>×${critMult.toFixed(2)} @ ${fmt(cc * 100)}% chance</b></div>
+      </div>
+      <p class="note">Bucket model with editable constants [VERIFY per season] — best for comparing builds; absolute values may drift from in-game. <a href="/methodology/">Methodology</a>.</p>`;
+    (window as any).calcD4 = calcD4;
+  }
+  (window as any).calcD4 = calcD4;
+  document.getElementById('dmg')?.addEventListener('input', calcD4);
+  calcD4();
+</script>

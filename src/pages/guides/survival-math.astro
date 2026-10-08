@@ -1,0 +1,65 @@
+---
+import Base from '../../layouts/Base.astro';
+import { SITE } from '../../data/site';
+
+const title = 'Survival Math in Diablo IV – Toughness & EHP Guide';
+const description =
+  'Survival math for Diablo IV: effective HP, the armor curve, why one-shots are a budget problem, and how much toughness endgame content actually demands.';
+const updated = SITE.lastVerified;
+---
+
+<Base
+  title={title}
+  description={description}
+  crumbs={[{ name: 'Guides' }, { name: 'Survival Math' }]}
+  schema={[{
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: 'Survival math for Diablo IV',
+    datePublished: '2026-10-08',
+    dateModified: updated,
+    author: { '@type': 'Organization', name: SITE.brand },
+  }]}
+>
+  <div class="page-head">
+    <h1>Survival math</h1>
+    <div class="h1-bar"></div>
+    <p class="lede">
+      Damage gets the guides; deaths get the blame. But staying alive is its own arithmetic — EHP, armor
+      curves, and a damage budget you can actually plan around.
+    </p>
+    <div class="microline"><span>By {SITE.brand}</span><span>Updated {updated}</span></div>
+  </div>
+
+  <section class="prose">
+    <h2>Quick answer</h2>
+    <p>
+      Convert life, armor and resistances into effective HP with the <a href="/toughness-calculator/">toughness
+      calculator</a>, then size that number against the content: you want roughly 2–3× the raw damage of a
+      typical elite swing before pushing higher Pit tiers.
+    </p>
+
+    <h2>EHP is the only fair comparison</h2>
+    <p>
+      "Should I take Life or armor?" is unanswerable in isolation — they multiply into the same currency:
+      effective HP. Life is its own bucket; armor and resistances are mitigation buckets. As with damage,
+      grow whichever multiplier is currently smaller.
+    </p>
+
+    <h2>Why you're getting one-shot</h2>
+    <ol class="steps">
+      <li><strong>Elite swings carry multipliers</strong> — your EHP floor is set against those, not trash hits.</li>
+      <li><strong>Enemy level scales with content tier</strong> — armor's mitigation shrinks as you push; re-run the calculator with the real enemy level.</li>
+      <li><strong>Resist caps exist</strong> — stacking past the cap buys nothing [VERIFY current caps per season].</li>
+      <li><strong>Some mechanics partially bypass mitigation</strong> — no EHP fixes those; movement does.</li>
+    </ol>
+
+    <h2>The toughness budget</h2>
+    <ul>
+      <li><strong>Farming tier:</strong> survive comfortably, drop toughness for damage.</li>
+      <li><strong>Push tier:</strong> 2–3× elite-swing EHP, or accept that death timers cost more than the stats would.</li>
+      <li><strong>Trade deliberately:</strong> every toughness affix is damage not taken — use the <a href="/damage-calculator/">damage calculator</a> to price the trade instead of guessing.</li>
+    </ul>
+    <p class="note">Armor curve constants shift between seasons — the model's K is editable and flagged [VERIFY]. <a href="/methodology/">Methodology</a>.</p>
+  </section>
+</Base>

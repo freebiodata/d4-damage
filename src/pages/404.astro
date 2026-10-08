@@ -1,0 +1,21 @@
+---
+import Base from '../layouts/Base.astro';
+import { TOOLS } from '../data/site';
+
+const title = 'Page Not Found (404) | D4 DAMAGE';
+const description = 'That page does not exist. Head back to the Diablo IV toolkit.';
+---
+
+<Base title={title} description={description}>
+  <div class="hero" style="padding-bottom:20px">
+    <p class="kicker">Error 404 // soul misplaced</p>
+    <h1>The path ends here, wanderer.</h1>
+    <p class="sub">This page doesn't exist — the toolkit does.</p>
+  </div>
+  <div class="cards">
+    {TOOLS.slice(0, 3).map((t) => (
+      <a class="card" href={t.href}><span class="ico">{t.ico}</span><h3>{t.name}</h3><p>{t.desc}</p></a>
+    ))}
+  </div>
+  <p><a href="/">← Back to home</a></p>
+</Base>

@@ -1,0 +1,116 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../data/site';
+
+const title = 'Diablo 4 Toughness Calculator – Effective HP';
+const description =
+  'Free Diablo IV toughness calculator: life, armor and resistances converted to effective HP against your target enemy level — see exactly how many hits you survive.';
+
+const faqs = [
+  {
+    q: 'What is effective HP (EHP)?',
+    a: 'How much raw damage it takes to kill you after mitigation. Armor and resistances divide incoming damage, so a tankier build "buys" virtual life — EHP is the common currency for comparing Life, armor and resist upgrades.',
+  },
+  {
+    q: 'What armor coefficient should I use?',
+    a: 'The armor curve constant K depends on the enemy-level scaling Blizzard uses, which has changed across seasons [VERIFY]. The default is a community-style placeholder; if your survivability in-game disagrees, adjust K until two test hits match, then trust the model.',
+  },
+  {
+    q: 'Why am I still getting one-shot above my EHP?',
+    a: 'Elite and boss attacks carry damage multipliers, and some mechanics bypass portions of mitigation. EHP is a floor against normal hits — build a 2–3× buffer for Pit-tier content. See <a href="/guides/survival-math/">survival math</a>.',
+  },
+];
+
+const faqLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
+---
+
+<Base title={title} description={description} crumbs={[{ name: 'Tools', href: '/tools/' }, { name: 'Toughness Calculator' }]} schema={[faqLd]}>
+  <div class="page-head">
+    <h1>Toughness Calculator</h1>
+    <div class="h1-bar"></div>
+    <p class="lede">
+      One number that matters when the hit lands: effective HP. Convert life, armor and resistances into the
+      raw damage you survive at your content's enemy level.
+    </p>
+    <div class="microline"><span>Free</span><span>No sign-up</span><span>Runs in your browser</span></div>
+  </div>
+
+  <form class="tool panel" id="tuf" autocomplete="off" onsubmit="return false">
+    <div class="fields">
+      <label class="field"><span>Maximum life</span><input id="life" type="number" value="45000" min="1" step="500" inputmode="numeric" /></label>
+      <label class="field"><span>Armor</span><input id="arm" type="number" value="9000" min="0" step="100" inputmode="numeric" /></label>
+      <label class="field"><span>Resistances (all %)</span><input id="res" type="number" value="50" min="0" max="90" step="1" inputmode="numeric" /><small>%</small></label>
+      <label class="field"><span>Enemy level</span><input id="lvl" type="number" value="130" min="1" step="1" inputmode="numeric" /><small>Pit-tier ≈ 130+</small></label>
+      <label class="field"><span>Armor coefficient K</span><input id="k" type="number" value="30" min="1" step="1" inputmode="numeric" /><small>[VERIFY per season]</small></label>
+      <label class="field"><span>Incoming hit (raw)</span><input id="hit" type="number" value="60000" min="1" step="1000" inputmode="numeric" /><small>Elite swing estimate</small></label>
+    </div>
+    <button class="btn" type="button" onclick="calcTuf()">Run the numbers</button>
+  </form>
+
+  <div class="result" id="result" aria-live="polite"></div>
+
+  <section class="prose">
+    <h2>How it works</h2>
+    <pre class="formula">armorDR = armor ÷ (armor + K × enemyLevel)
+resDR   = resistance ÷ 100          (capped)
+EHP     = life ÷ (1 − armorDR) ÷ (1 − resDR)
+survived = EHP ÷ incoming raw hit</pre>
+    <p>The K constant parameterizes the armor curve — it's the model's main [VERIFY] because Blizzard's scaling has moved between seasons. Fortify stacks add to the life pool directly. <a href="/methodology/">Methodology</a>.</p>
+
+    <h2>FAQ</h2>
+    {faqs.map((f) => (
+      <details><summary>{f.q}</summary><p>{f.a}</p></details>
+    ))}
+  </section>
+
+  <section class="prose">
+    <h2>Related tools and guides</h2>
+    <div class="cards">
+      <a class="card" href="/guides/survival-math/"><span class="ico">📙</span><h3>Survival math</h3><p>Why one-shots are a budget problem.</p><span class="tag">Guide</span></a>
+      <a class="card" href="/damage-calculator/"><span class="ico">⚔️</span><h3>Damage Calculator</h3><p>Trade toughness for damage deliberately.</p><span class="tag">Flagship</span></a>
+      <a class="card" href="/paragon-planner/"><span class="ico">🕯️</span><h3>Paragon Planner</h3><p>More levels are also more survivability.</p><span class="tag">Calculator</span></a>
+    </div>
+  </section>
+
+  <div class="trust">
+    <strong>Maintained by {SITE.brand}</strong> · Free, no-ads, no-account · Model: <a href="/methodology/">Methodology</a> ·
+    Found an error? <a href="/contact/">Report it</a>.
+  </div>
+</Base>
+
+<script>
+  const $ = (id: string) => document.getElementById(id) as HTMLInputElement;
+  const numv = (id: string, fb = 0) => { const v = parseFloat($(id).value); return Number.isFinite(v) ? v : fb; };
+  const fmt = (n: number) => (Number.isFinite(n) ? new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Math.round(n)) : '—');
+
+  function calcTuf() {
+    const life = numv('life'), arm = numv('arm'), lvl = numv('lvl', 100), K = numv('k', 30);
+    const res = Math.min(90, Math.max(0, numv('res'))) / 100;
+    const hit = numv('hit', 1);
+    if (life <= 0) return;
+    const armorDR = arm + K * lvl > 0 ? arm / (arm + K * lvl) : 0;
+    const ehp = life / (1 - armorDR) / (1 - Math.min(res, 0.95));
+    const survived = hit > 0 ? ehp / hit : NaN;
+    const el = document.getElementById('result')!;
+    el.innerHTML = `
+      <div class="stats">
+        <div class="stat"><span class="k">Effective HP</span><span class="v">${fmt(ehp)}</span></div>
+        <div class="stat"><span class="k">Armor DR</span><span class="v gold">${fmt(armorDR * 100, 1)}%</span></div>
+        <div class="stat"><span class="k">Hits survived (vs your input)</span><span class="v blood">${fmt(survived, 1)}</span></div>
+      </div>
+      <div class="rows">
+        <div class="row"><span>Mitigated hit taken</span><b>${fmt(hit * (1 - armorDR) * (1 - res))}</b></div>
+        <div class="row"><span>Armor's virtual life</span><b>+${fmt(ehp - life / (1 - res) - life)}</b></div>
+      </div>
+      ${survived < 1 ? `<div class="verdict bad">❌ That hit deletes you — you need ~2–3× this EHP for elite-tier swings.</div>` : survived < 2 ? `<div class="verdict bad">⚠️ Survives ${fmt(survived, 1)} swings — thin margin for elite/boss content.</div>` : `<div class="verdict ok">✅ Survives ${fmt(survived, 1)} swings — comfortable margin.</div>`}
+      <p class="note">Armor constant K is a placeholder [VERIFY per season] — calibrate with two in-game hits if precision matters. <a href="/methodology/">Methodology</a>.</p>`;
+    (window as any).calcTuf = calcTuf;
+  }
+  (window as any).calcTuf = calcTuf;
+  document.getElementById('tuf')?.addEventListener('input', calcTuf);
+  calcTuf();
+</script>

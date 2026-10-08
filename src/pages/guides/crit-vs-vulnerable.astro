@@ -1,0 +1,66 @@
+---
+import Base from '../../layouts/Base.astro';
+import { SITE } from '../../data/site';
+
+const title = 'Crit vs Vulnerable in Diablo 4 – Which Bucket to Feed';
+const description =
+  'Crit versus Vulnerable in Diablo IV: how the two buckets differ, how uptime changes the math, and how to decide which affix your build should chase next.';
+const updated = SITE.lastVerified;
+---
+
+<Base
+  title={title}
+  description={description}
+  crumbs={[{ name: 'Guides' }, { name: 'Crit vs Vulnerable' }]}
+  schema={[{
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: 'Crit vs Vulnerable in Diablo IV',
+    datePublished: '2026-10-08',
+    dateModified: updated,
+    author: { '@type': 'Organization', name: SITE.brand },
+  }]}
+>
+  <div class="page-head">
+    <h1>Crit vs Vulnerable</h1>
+    <div class="h1-bar"></div>
+    <p class="lede">
+      The two best damage buckets in the game, and the eternal reroll question between them. The answer is
+      arithmetic — small bucket beats big bucket — with one twist: uptime.
+    </p>
+    <div class="microline"><span>By {SITE.brand}</span><span>Updated {updated}</span></div>
+  </div>
+
+  <section class="prose">
+    <h2>Quick answer</h2>
+    <p>
+      Crit multipliers apply only when you crit (so crit <em>chance</em> gates the bucket); vulnerable applies
+      whenever the enemy is vulnerable (so <em>uptime</em> gates it). Whichever condition you satisfy more
+      reliably is the bucket worth feeding first — check both gates in the <a href="/damage-calculator/">damage calculator</a>.
+    </p>
+
+    <h2>The twist: uptime beats size</h2>
+    <pre class="formula">vuln bucket ×1.8 at 40% uptime → avg gain 1 + 0.4×0.8 = ×1.32
+crit  bucket ×2.0 at 60% chance → avg gain 1 + 0.6×1.0 = ×1.60</pre>
+    <p>
+      A bigger multiplier with worse availability loses. This is why "always take vulnerable" and "always take
+      crit" are both wrong — the answer is conditional on your build's uptime and crit chance, which is why
+      the comparator works from <em>your</em> numbers: <a href="/stat-priority/">stat priority comparator</a>.
+    </p>
+
+    <h2>Rules of thumb that hold up</h2>
+    <ul>
+      <li><strong>Below ~40% crit chance:</strong> crit damage affixes underperform — fix the chance first.</li>
+      <li><strong>Below ~50% vulnerable uptime:</strong> vulnerable affixes underperform — fix the uptime (aspects, skills) first.</li>
+      <li><strong>Both gates satisfied:</strong> feed whichever bucket is currently smaller; rerun the comparator after each big change.</li>
+      <li><strong>Additive last:</strong> it shares one bucket with everything else — the classic trap explained in <a href="/guides/how-damage-works/">how damage works</a>.</li>
+    </ul>
+
+    <h2>The 30-second decision</h2>
+    <ol class="steps">
+      <li>Enter current stats in the <a href="/stat-priority/">comparator</a>.</li>
+      <li>Set option A to the additive affix, option B to the crit/vulnerable affix you're considering.</li>
+      <li>Take the bigger marginal gain. If within ~1% of each other, take the one matching your playstyle variance (crit for burst, vuln for sustained).</li>
+    </ol>
+  </section>
+</Base>
